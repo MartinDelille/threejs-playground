@@ -2,9 +2,6 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { World, Material, Plane, Body, Box, Vec3 } from "cannon-es";
 
-import { World } from "cannon-es";
-
-
 const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(
