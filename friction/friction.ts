@@ -10,8 +10,10 @@ const camera = new THREE.PerspectiveCamera(
   1,
   20000,
 );
-camera.position.set(-30, 30, -100);
+camera.position.set(-30, 30, -10);
 
+const axesHelper = new THREE.AxesHelper(50);
+scene.add(axesHelper);
 const renderer = new THREE.WebGLRenderer();
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -57,18 +59,37 @@ const cubeBody = new Body({
   material: slipperyMaterial
 });
 cubeBody.addShape(cubeShape);
-cubeBody.position.set(0, 5, 0);
+cubeBody.position.set(0, 10, 0);
 world.addBody(cubeBody);
 
+let speed = 0;
+let rotationSpeed = 0;
 
 window.addEventListener("keydown", (event): void => {
   switch (event.key) {
-    case "h":
-      console.log("Hello, world!");
-      cubeBody.applyImpulse(new Vec3(0, 0, 0.1), new Vec3(0, 0, 0));
+    case "w":
+      speed = 1;
       break;
-    case "m":
-      cubeBody.angularVelocity.set(0, 5, 0); // Adjust the value as needed
+    case "s":
+      speed = -1;
+      break;
+    case "a":
+      rotationSpeed = 1;
+      break;
+    case "d":
+      rotationSpeed = -1;
+      break;
+  }
+});
+window.addEventListener("keyup", (event): void => {
+  switch (event.key) {
+    case "w":
+    case "s":
+      speed = 0;
+      break;
+    case "a":
+    case "d":
+      rotationSpeed = 0;
       break;
   }
 });
@@ -92,6 +113,15 @@ function onWindowResize() {
 
 function animate() {
   world.step(1 / 60);
+
+  // Calculate the forward direction
+  const forward = new THREE.Vector3(0, 0, -1);
+  forward.applyQuaternion(cube.quaternion);
+  forward.normalize();
+
+  // Apply the velocity in the forward direction
+  cubeBody.velocity.set(forward.x * speed * 5, cubeBody.velocity.y, forward.z * speed * 5);
+  cubeBody.angularVelocity.set(0, rotationSpeed * 1, 0);
   cube.position.copy(cubeBody.position);
   cube.quaternion.copy(cubeBody.quaternion);
   renderer.render(scene, camera);
