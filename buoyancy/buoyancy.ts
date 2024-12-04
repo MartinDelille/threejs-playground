@@ -36,7 +36,11 @@ scene.add(ambientLight);
 
 const plane = new THREE.Mesh(
   new THREE.PlaneGeometry(100, 100),
-  new THREE.MeshStandardMaterial({ color: 0x0000ff }),
+  new THREE.MeshStandardMaterial({
+    color: 0x0505ff,
+    transparent: true,
+    opacity: 0.5
+  }),
 );
 
 plane.rotation.x = -Math.PI / 2;
@@ -49,7 +53,7 @@ const cube = new THREE.Mesh(
 
 scene.add(cube);
 
-const cubeShape = new CANNON.Box(new CANNON.Vec3(1, 1, 1));
+const cubeShape = new CANNON.Box(new CANNON.Vec3(10, 10, 10));
 const cubeBody = new CANNON.Body({
   mass: 1,
 });
@@ -92,7 +96,7 @@ window.addEventListener("keyup", (event): void => {
 
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.maxPolarAngle = Math.PI * 0.495;
+controls.maxPolarAngle = Math.PI * 0.995;
 controls.target.set(0, 10, 0);
 controls.minDistance = 40.0;
 controls.maxDistance = 200.0;
@@ -116,7 +120,7 @@ function animate() {
   const buoyancyForce = 8 * (- cubeBody.position.y);
   let force = new CANNON.Vec3(0, buoyancyForce, -speed);
   //force.vadd(new CANNON.Vec3(0, 0, -speed));
-  console.log(speed,force);
+  console.log(speed, force);
   //cubeBody.applyForce(new CANNON.Vec3(0, buoyancyForce, 0), cubeBody.position);
   cubeBody.applyLocalForce(force, new CANNON.Vec3(0, 0, 0));
   // Apply the velocity in the forward direction
