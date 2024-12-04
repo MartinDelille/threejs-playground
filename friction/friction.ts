@@ -34,6 +34,14 @@ scene.add(directionalLight);
 const ambientLight = new THREE.AmbientLight(0x404040, 2); // soft white light
 scene.add(ambientLight);
 
+const plane = new THREE.Mesh(
+  new THREE.PlaneGeometry(100, 100),
+  new THREE.MeshStandardMaterial({ color: 0x00ff00 }),
+);
+
+plane.rotation.x = -Math.PI / 2;
+scene.add(plane);
+
 // Create a plane
 const groundMaterial = new Material('ground')
 groundMaterial.friction = 0.3
@@ -53,13 +61,13 @@ scene.add(cube);
 const slipperyMaterial = new Material('slippery')
 slipperyMaterial.friction = 0.01
 
-const cubeShape = new Box(new Vec3(1, 1, 1));
+const cubeShape = new Box(new Vec3(10, 10, 10));
 const cubeBody = new Body({
   mass: 1,
   material: slipperyMaterial
 });
 cubeBody.addShape(cubeShape);
-cubeBody.position.set(0, 10, 0);
+cubeBody.position.set(0, 30, 0);
 world.addBody(cubeBody);
 
 let speed = 0;
