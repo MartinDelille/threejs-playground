@@ -68,10 +68,10 @@ let rotationSpeed = 0;
 window.addEventListener("keydown", (event): void => {
   switch (event.key) {
     case "w":
-      speed = 1;
+      speed = 10;
       break;
     case "s":
-      speed = -1;
+      speed = -10;
       break;
     case "a":
       rotationSpeed = 1;
@@ -115,12 +115,14 @@ function animate() {
   world.step(1 / 60);
 
   // Calculate the forward direction
-  const forward = new THREE.Vector3(0, 0, -1);
-  forward.applyQuaternion(cube.quaternion);
-  forward.normalize();
+  const forward = new THREE.Vector3(0, 0, -speed);
+  //forward.applyQuaternion(cube.quaternion);
+  //forward.normalize();
 
   // Apply the velocity in the forward direction
-  cubeBody.velocity.set(forward.x * speed * 5, cubeBody.velocity.y, forward.z * speed * 5);
+  //cubeBody.velocity.set(forward.x * speed * 5, cubeBody.velocity.y, forward.z * speed * 5);
+  //cubeBody.applyForce(new Vec3(forward.x * speed * 5, 0, forward.z * speed * 5), new Vec3(0, 0, 0));
+  cubeBody.applyLocalForce(forward, new Vec3(0, 0, 0));
   cubeBody.angularVelocity.set(0, rotationSpeed * 1, 0);
   cube.position.copy(cubeBody.position);
   cube.quaternion.copy(cubeBody.quaternion);

@@ -55,6 +55,7 @@ const cubeBody = new CANNON.Body({
 });
 cubeBody.addShape(cubeShape);
 cubeBody.position.set(0, 10, 0);
+cubeBody.linearDamping = 0.8;
 world.addBody(cubeBody);
 
 let speed = 0;
@@ -110,14 +111,16 @@ function animate() {
   world.step(1 / 60);
 
   // Calculate the forward direction
-  const forward = new THREE.Vector3(0, 0, -1);
-  forward.applyQuaternion(cube.quaternion);
-  forward.normalize();
+  const forward = new THREE.Vector3(0, 0, -speed);
 
   const buoyancyForce = 8 * (- cubeBody.position.y);
-  cubeBody.applyForce(new CANNON.Vec3(0, buoyancyForce, 0), cubeBody.position);
+  let force = new CANNON.Vec3(0, buoyancyForce, -speed);
+  //force.vadd(new CANNON.Vec3(0, 0, -speed));
+  console.log(speed,force);
+  //cubeBody.applyForce(new CANNON.Vec3(0, buoyancyForce, 0), cubeBody.position);
+  cubeBody.applyLocalForce(force, new CANNON.Vec3(0, 0, 0));
   // Apply the velocity in the forward direction
-  cubeBody.velocity.set(forward.x * speed * 5, cubeBody.velocity.y, forward.z * speed * 5);
+  //cubeBody.velocity.set(forward.x * speed * 5, cubeBody.velocity.y, forward.z * speed * 5);
   cubeBody.angularVelocity.set(0, rotationSpeed * 1, 0);
   cube.position.copy(cubeBody.position);
   cube.quaternion.copy(cubeBody.quaternion);
