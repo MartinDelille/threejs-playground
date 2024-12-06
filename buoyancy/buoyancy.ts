@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { World, Material, Plane, Body, Box, Vec3 } from "cannon-es";
+import * as CANNON from "cannon-es";
 
 const scene = new THREE.Scene();
 
@@ -22,7 +22,7 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.5;
 document.body.appendChild(renderer.domElement);
 
-const world = new World();
+const world = new CANNON.World();
 world.gravity.set(0, -9.82, 0);
 
 // Add directional light
@@ -34,40 +34,33 @@ scene.add(directionalLight);
 const ambientLight = new THREE.AmbientLight(0x404040, 2); // soft white light
 scene.add(ambientLight);
 
-const plane = new THREE.Mesh(
-  new THREE.PlaneGeometry(100, 100),
-  new THREE.MeshStandardMaterial({ color: 0x00ff00 }),
+let plane = new THREE.Mesh(
+  new THREE.PlaneGeometry(1000, 1000, 1000, 1000),
+  new THREE.MeshStandardMaterial({
+    color: 0x0505ff,
+    transparent: true,
+    opacity: 0.5
+  }),
 );
 
 plane.rotation.x = -Math.PI / 2;
 scene.add(plane);
 
-// Create a plane
-const groundMaterial = new Material('ground')
-groundMaterial.friction = 0.3
-const planeShape = new Plane();
-const planeBody = new Body({ mass: 0, material: groundMaterial });
-planeBody.addShape(planeShape);
-planeBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
-world.addBody(planeBody);
-
+const size = 10;
 const cube = new THREE.Mesh(
-  new THREE.BoxGeometry(10, 10, 10),
+  new THREE.BoxGeometry(size, size, size),
   new THREE.MeshStandardMaterial({ color: 0xff0000 }),
 );
 
 scene.add(cube);
 
-const slipperyMaterial = new Material('slippery')
-slipperyMaterial.friction = 0.01
-
-const cubeShape = new Box(new Vec3(10, 10, 10));
-const cubeBody = new Body({
+const cubeShape = new CANNON.Box(new CANNON.Vec3(size, size, size));
+const cubeBody = new CANNON.Body({
   mass: 1,
-  material: slipperyMaterial
 });
 cubeBody.addShape(cubeShape);
-cubeBody.position.set(0, 30, 0);
+cubeBody.position.set(0, size, 0);
+cubeBody.linearDamping = 0.8;
 world.addBody(cubeBody);
 
 let speed = 0;
@@ -76,10 +69,10 @@ let rotationSpeed = 0;
 window.addEventListener("keydown", (event): void => {
   switch (event.key) {
     case "w":
-      speed = 10;
+      speed = 1;
       break;
     case "s":
-      speed = -10;
+      speed = -1;
       break;
     case "a":
       rotationSpeed = 1;
@@ -104,7 +97,7 @@ window.addEventListener("keyup", (event): void => {
 
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.maxPolarAngle = Math.PI * 0.495;
+controls.maxPolarAngle = Math.PI * 0.995;
 controls.target.set(0, 10, 0);
 controls.minDistance = 40.0;
 controls.maxDistance = 200.0;
@@ -119,18 +112,47 @@ function onWindowResize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
+const waveAngle = Math.PI / 2;
+const cosAngle = Math.cos(waveAngle);
+const sinAngle = Math.sin(waveAngle);
+const period = 18;
+const waveHeight = 8;
+
+function getWaterHeightAt(x: number, z: number, time: number): number {
+  const rotatedX = x * cosAngle - z * sinAngle;
+  return Math.sin(rotatedX / period + time) * waveHeight;
+}
+
 function animate() {
+  const time = performance.now() * 0.001;
+  const vertices = plane.geometry.attributes.position.array;
+
+  for (let i = 0; i < vertices.length; i += 3) {
+    const x = vertices[i];
+    const y = vertices[i + 1];
+    vertices[i + 2] = getWaterHeightAt(x, y, time);
+  }
+
+  plane.geometry.attributes.position.needsUpdate = true;
+
   world.step(1 / 60);
 
   // Calculate the forward direction
   const forward = new THREE.Vector3(0, 0, -speed);
-  //forward.applyQuaternion(cube.quaternion);
-  //forward.normalize();
 
+  let buoyancyForce = 0;
+  const waterHeight = getWaterHeightAt(cubeBody.position.x, cubeBody.position.z, time);
+  if (cubeBody.position.y < waterHeight) {
+    buoyancyForce = 8 * (- cubeBody.position.y);
+  }
+  let force = new CANNON.Vec3(0, buoyancyForce, -speed);
+  //force.vadd(new CANNON.Vec3(0, 0, -speed));
+  console.log(cubeBody);
+  //cubeBody.applyForce(new CANNON.Vec3(0, buoyancyForce, 0), cubeBody.position);
+  //cubeBody.applyLocalForce(force, new CANNON.Vec3(0, 0, 0));
+  cubeBody.applyForce(force, cubeBody.position);
   // Apply the velocity in the forward direction
   //cubeBody.velocity.set(forward.x * speed * 5, cubeBody.velocity.y, forward.z * speed * 5);
-  //cubeBody.applyForce(new Vec3(forward.x * speed * 5, 0, forward.z * speed * 5), new Vec3(0, 0, 0));
-  cubeBody.applyLocalForce(forward, new Vec3(0, 0, 0));
   cubeBody.angularVelocity.set(0, rotationSpeed * 1, 0);
   cube.position.copy(cubeBody.position);
   cube.quaternion.copy(cubeBody.quaternion);
