@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { World, Material, Plane, Body, Box, Vec3 } from "cannon-es";
 
 const scene = new THREE.Scene();
