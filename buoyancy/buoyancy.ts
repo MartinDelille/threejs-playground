@@ -34,12 +34,13 @@ scene.add(directionalLight);
 const ambientLight = new THREE.AmbientLight(0x404040, 2); // soft white light
 scene.add(ambientLight);
 
-const plane = new THREE.Mesh(
-  new THREE.PlaneGeometry(100, 100),
+let plane = new THREE.Mesh(
+  new THREE.PlaneGeometry(1000, 1000, 1000, 1000),
   new THREE.MeshStandardMaterial({
     color: 0x0505ff,
     transparent: true,
-    opacity: 0.5
+    opacity: 0.5,
+    flatShading: true,
   }),
 );
 
@@ -111,7 +112,30 @@ function onWindowResize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
+const waveAngle = Math.PI / 2;
+const cosAngle = Math.cos(waveAngle);
+const sinAngle = Math.sin(waveAngle);
+const waveSpeed = 0.9;
+const wavePeriod = 20;
+const waveHeight = 8;
+
+function getWaterHeightAt(x: number, z: number, time: number): number {
+  const rotatedX = x * cosAngle - z * sinAngle;
+  return Math.sin(rotatedX / wavePeriod + waveSpeed * time) * waveHeight;
+}
+
 function animate() {
+  const time = performance.now() * 0.001;
+  const vertices = plane.geometry.attributes.position.array;
+
+  for (let i = 0; i < vertices.length; i += 3) {
+    const x = vertices[i];
+    const y = vertices[i + 1];
+    vertices[i + 2] = getWaterHeightAt(x, y, time);
+  }
+
+  plane.geometry.attributes.position.needsUpdate = true;
+
   world.step(1 / 60);
 
   // Calculate the forward direction
