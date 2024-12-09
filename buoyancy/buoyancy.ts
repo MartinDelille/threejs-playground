@@ -1,6 +1,9 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import * as CANNON from "cannon-es";
+import * as dat from "lil-gui";
+
+const gui = new dat.GUI();
 
 const scene = new THREE.Scene();
 
@@ -11,6 +14,8 @@ const camera = new THREE.PerspectiveCamera(
   20000,
 );
 camera.position.set(-30, 30, -10);
+gui.add(camera.position, "x", -100, 100);
+gui.add(camera.position, "y", -100, 100);
 
 const axesHelper = new THREE.AxesHelper(50);
 scene.add(axesHelper);
@@ -27,7 +32,7 @@ world.gravity.set(0, -9.82, 0);
 
 // Add directional light
 const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
-directionalLight.position.set(-90, 50, 50).normalize();
+directionalLight.position.set(-90, 90, 50).normalize();
 scene.add(directionalLight);
 
 // Add ambient light
@@ -35,13 +40,21 @@ const ambientLight = new THREE.AmbientLight(0x404040, 2); // soft white light
 scene.add(ambientLight);
 
 let plane = new THREE.Mesh(
-  new THREE.PlaneGeometry(1000, 1000, 1000, 1000),
+  new THREE.PlaneGeometry(1000, 1000, 500, 500),
   new THREE.MeshStandardMaterial({
-    color: 0x0505ff,
+    color: 0x156289,
     transparent: true,
-    opacity: 0.5
+    opacity: 0.5,
+    emissive: 0x072534,
+    flatShading: true,
+    //wireframe: true,
   }),
 );
+
+gui.add(plane.material, "wireframe");
+gui.addColor(plane.material, "color").onChange((color: number): void => {
+  console.log(color);
+}
 
 plane.rotation.x = -Math.PI / 2;
 scene.add(plane);
@@ -148,5 +161,6 @@ function animate() {
   cubeBody.angularVelocity.set(0, rotationSpeed * 1, 0);
   cube.position.copy(cubeBody.position);
   cube.quaternion.copy(cubeBody.quaternion);
+
   renderer.render(scene, camera);
 }
