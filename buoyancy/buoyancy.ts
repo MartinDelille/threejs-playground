@@ -1,6 +1,12 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import * as CANNON from "cannon-es";
+import * as dat from "lil-gui";
+
+const gui = new dat.GUI();
+const debugObject = {
+  color: 0x52ebff,
+}
 
 const scene = new THREE.Scene();
 
@@ -10,9 +16,15 @@ const camera = new THREE.PerspectiveCamera(
   1,
   20000,
 );
-camera.position.set(-30, 30, -10);
+camera.position.set(50, 30, 50);
+let cameraGui = gui.addFolder("Camera");
+cameraGui.add(camera.position, "x", -100, 100).listen();
+cameraGui.add(camera.position, "y", -100, 100).listen();
+cameraGui.add(camera.position, "z", -100, 100).listen();
 
 const axesHelper = new THREE.AxesHelper(50);
+axesHelper.visible = false;
+gui.add(axesHelper, "visible").name("Axes Helper");
 scene.add(axesHelper);
 const renderer = new THREE.WebGLRenderer();
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -27,22 +39,33 @@ world.gravity.set(0, -9.82, 0);
 
 // Add directional light
 const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
-directionalLight.position.set(-90, 50, 50).normalize();
+directionalLight.position.set(-90, 90, 50).normalize();
 scene.add(directionalLight);
+
+let lightGui = gui.addFolder("Light").close();
+lightGui.add(directionalLight.position, "x", -100, 100).listen();
+lightGui.add(directionalLight.position, "y", -100, 100).listen();
+lightGui.add(directionalLight.position, "z", -100, 100).listen();
 
 // Add ambient light
 const ambientLight = new THREE.AmbientLight(0x404040, 2); // soft white light
 scene.add(ambientLight);
 
 let plane = new THREE.Mesh(
-  new THREE.PlaneGeometry(1000, 1000, 1000, 1000),
+  new THREE.PlaneGeometry(1000, 1000, 500, 500),
   new THREE.MeshStandardMaterial({
-    color: 0x0505ff,
+    color: debugObject.color,
     transparent: true,
     opacity: 0.5,
     flatShading: true,
   }),
 );
+
+const planeGui = gui.addFolder("Plane");
+planeGui.add(plane.material, "wireframe");
+planeGui.addColor(debugObject, "color").onChange((value: THREE.Color) => {
+  plane.material.color.set(value);
+});
 
 plane.rotation.x = -Math.PI / 2;
 scene.add(plane);
@@ -53,6 +76,11 @@ const cube = new THREE.Mesh(
   new THREE.MeshStandardMaterial({ color: 0xff0000 }),
 );
 
+const cubeGui = gui.addFolder("Cube");
+cubeGui.add(cube, "visible");
+cubeGui.add(cube.position, "x", -100, 100).listen();
+cubeGui.add(cube.position, "y", -100, 100).listen();
+cubeGui.add(cube.position, "z", -100, 100).listen();
 scene.add(cube);
 
 const cubeShape = new CANNON.Box(new CANNON.Vec3(size, size, size));
