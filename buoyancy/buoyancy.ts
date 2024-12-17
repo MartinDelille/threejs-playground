@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
 import { Demo } from "../common/demo";
+import { WaveGeometry } from "./WaveGeometry";
 
 const debugObject = {
   color: 0x52ebff,
@@ -9,7 +10,7 @@ const debugObject = {
 const demo = new Demo();
 
 let plane = new THREE.Mesh(
-  new THREE.PlaneGeometry(1000, 1000, 500, 500),
+  new WaveGeometry(800, 40),
   new THREE.MeshStandardMaterial({
     color: debugObject.color,
     transparent: true,
@@ -97,8 +98,8 @@ demo.start((time: number) => {
 
   for (let i = 0; i < vertices.length; i += 3) {
     const x = vertices[i];
-    const y = vertices[i + 1];
-    vertices[i + 2] = getWaterHeightAt(x, y, time);
+    const z = vertices[i + 2];
+    vertices[i + 1] = getWaterHeightAt(x, z, time);
   }
 
   plane.geometry.attributes.position.needsUpdate = true;
