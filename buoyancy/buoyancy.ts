@@ -1,55 +1,12 @@
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import * as CANNON from "cannon-es";
-import * as dat from "lil-gui";
+import { Demo } from "../common/demo";
 
-const gui = new dat.GUI();
 const debugObject = {
   color: 0x52ebff,
 }
 
-const scene = new THREE.Scene();
-
-const camera = new THREE.PerspectiveCamera(
-  55,
-  window.innerWidth / window.innerHeight,
-  1,
-  20000,
-);
-camera.position.set(50, 30, 50);
-let cameraGui = gui.addFolder("Camera");
-cameraGui.add(camera.position, "x", -100, 100).listen();
-cameraGui.add(camera.position, "y", -100, 100).listen();
-cameraGui.add(camera.position, "z", -100, 100).listen();
-
-const axesHelper = new THREE.AxesHelper(50);
-axesHelper.visible = false;
-gui.add(axesHelper, "visible").name("Axes Helper");
-scene.add(axesHelper);
-const renderer = new THREE.WebGLRenderer();
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setAnimationLoop(animate);
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.5;
-document.body.appendChild(renderer.domElement);
-
-const world = new CANNON.World();
-world.gravity.set(0, -9.82, 0);
-
-// Add directional light
-const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
-directionalLight.position.set(-90, 90, 50).normalize();
-scene.add(directionalLight);
-
-let lightGui = gui.addFolder("Light").close();
-lightGui.add(directionalLight.position, "x", -100, 100).listen();
-lightGui.add(directionalLight.position, "y", -100, 100).listen();
-lightGui.add(directionalLight.position, "z", -100, 100).listen();
-
-// Add ambient light
-const ambientLight = new THREE.AmbientLight(0x404040, 2); // soft white light
-scene.add(ambientLight);
+const demo = new Demo();
 
 let plane = new THREE.Mesh(
   new THREE.PlaneGeometry(1000, 1000, 500, 500),
@@ -61,14 +18,14 @@ let plane = new THREE.Mesh(
   }),
 );
 
-const planeGui = gui.addFolder("Plane");
+const planeGui = demo.gui.addFolder("Plane");
 planeGui.add(plane.material, "wireframe");
 planeGui.addColor(debugObject, "color").onChange((value: THREE.Color) => {
   plane.material.color.set(value);
 });
 
 plane.rotation.x = -Math.PI / 2;
-scene.add(plane);
+demo.scene.add(plane);
 
 const size = 10;
 const cube = new THREE.Mesh(
@@ -76,12 +33,12 @@ const cube = new THREE.Mesh(
   new THREE.MeshStandardMaterial({ color: 0xff0000 }),
 );
 
-const cubeGui = gui.addFolder("Cube");
+const cubeGui = demo.gui.addFolder("Cube");
 cubeGui.add(cube, "visible");
 cubeGui.add(cube.position, "x", -100, 100).listen();
 cubeGui.add(cube.position, "y", -100, 100).listen();
 cubeGui.add(cube.position, "z", -100, 100).listen();
-scene.add(cube);
+demo.scene.add(cube);
 
 const cubeShape = new CANNON.Box(new CANNON.Vec3(size, size, size));
 const cubeBody = new CANNON.Body({
@@ -89,7 +46,7 @@ const cubeBody = new CANNON.Body({
 });
 cubeBody.addShape(cubeShape);
 cubeBody.position.set(0, size, 0);
-world.addBody(cubeBody);
+demo.world.addBody(cubeBody);
 
 let speed = 0;
 let rotationSpeed = 0;
@@ -123,23 +80,6 @@ window.addEventListener("keyup", (event): void => {
   }
 });
 
-
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.maxPolarAngle = Math.PI * 0.995;
-controls.target.set(0, 10, 0);
-controls.minDistance = 40.0;
-controls.maxDistance = 200.0;
-controls.update();
-
-window.addEventListener("resize", onWindowResize);
-
-function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
 const waveAngle = Math.PI / 2;
 const cosAngle = Math.cos(waveAngle);
 const sinAngle = Math.sin(waveAngle);
@@ -152,8 +92,7 @@ function getWaterHeightAt(x: number, z: number, time: number): number {
   return Math.sin(rotatedX / wavePeriod + waveSpeed * time) * waveHeight;
 }
 
-function animate() {
-  const time = performance.now() * 0.001;
+demo.start((time: number) => {
   const vertices = plane.geometry.attributes.position.array;
 
   for (let i = 0; i < vertices.length; i += 3) {
@@ -164,7 +103,6 @@ function animate() {
 
   plane.geometry.attributes.position.needsUpdate = true;
 
-  world.step(1 / 60);
 
   // Calculate the forward direction
   const forward = new THREE.Vector3(0, 0, -1);
@@ -178,5 +116,4 @@ function animate() {
   cubeBody.angularVelocity.set(0, rotationSpeed * 1, 0);
   cube.position.copy(cubeBody.position);
   cube.quaternion.copy(cubeBody.quaternion);
-  renderer.render(scene, camera);
-}
+});
