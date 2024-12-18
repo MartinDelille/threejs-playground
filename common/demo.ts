@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import * as dat from "lil-gui";
 import * as CANNON from "cannon-es";
+import CannonDebugger from "cannon-es-debugger";
 
 export class Demo {
   gui: dat.GUI;
@@ -11,6 +12,7 @@ export class Demo {
   controls: OrbitControls;
   world: CANNON.World;
   worldManual = false;
+  cannonDebugger: CannonDebugger;
   time = 0;
 
   constructor() {
@@ -77,12 +79,17 @@ export class Demo {
     worldGui.add(this, "worldManual").name("Manual World");
     worldGui.add(this, "runWorld").name("Run World");
     worldGui.add(this.world.gravity, "y", -20, 20).name("Gravity").listen();
+    this.cannonDebugger = CannonDebugger(this.scene, this.world, {
+      color: 0xffffff,
+      scale: 1,
+    });
   }
 
   runWorld() {
     const duration = 1 / 60;
     this.world.step(duration);
     this.time += duration;
+    this.cannonDebugger.update();
   }
 
   addLights() {
