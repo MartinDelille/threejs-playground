@@ -10,14 +10,17 @@ const debugObject = {
 
 const demo = new Demo();
 
+let planeMaterial = new THREE.MeshStandardMaterial({
+  color: debugObject.color,
+  transparent: true,
+  opacity: 0.5,
+  flatShading: true,
+});
+// planeMaterial = new THREE.MeshNormalMaterial();
+
 let plane = new THREE.Mesh(
   new WaveGeometry(800, 40),
-  new THREE.MeshStandardMaterial({
-    color: debugObject.color,
-    transparent: true,
-    opacity: 0.5,
-    flatShading: true,
-  }),
+  planeMaterial,
 );
 
 const waterGui = demo.gui.addFolder("Water");
@@ -127,6 +130,7 @@ demo.start((time: number) => {
   }
 
   plane.geometry.attributes.position.needsUpdate = true;
+  plane.geometry.computeVertexNormals();
 
 
   // Calculate the forward direction

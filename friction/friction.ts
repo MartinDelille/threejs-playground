@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { Material, Plane, Body, Box, Vec3 } from "cannon-es";
+import * as CANNON from "cannon-es";
 import { Demo } from "../common/demo";
 
 const demo = new Demo();
@@ -13,10 +13,10 @@ plane.rotation.x = -Math.PI / 2;
 demo.scene.add(plane);
 
 // Create a plane
-const groundMaterial = new Material('ground')
-groundMaterial.friction = 0.3
-const planeShape = new Plane();
-const planeBody = new Body({ mass: 0, material: groundMaterial });
+const groundMaterial = new CANNON.Material('ground')
+//groundMaterial.friction = 0.3
+const planeShape = new CANNON.Plane();
+const planeBody = new CANNON.Body({ mass: 0, material: groundMaterial });
 planeBody.addShape(planeShape);
 planeBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
 demo.world.addBody(planeBody);
@@ -28,11 +28,20 @@ const cube = new THREE.Mesh(
 
 demo.scene.add(cube);
 
-const slipperyMaterial = new Material('slippery')
-slipperyMaterial.friction = 0.01
+const slipperyMaterial = new CANNON.Material('slippery')
+//slipperyMaterial.friction = 0.01
 
-const cubeShape = new Box(new Vec3(10, 10, 10));
-const cubeBody = new Body({
+const contactMaterial = new CANNON.ContactMaterial(groundMaterial, slipperyMaterial, {
+  friction: 0.1,
+  restitution: 0.5,
+  contactEquationStiffness: 1e9,
+  contactEquationRelaxation: 3,
+  frictionEquationStiffness: 1e5,
+  frictionEquationRelaxation: 3,
+});
+
+const cubeShape = new CANNON.Box(new CANNON.Vec3(5, 5, 5));
+const cubeBody = new CANNON.Body({
   mass: 1,
   material: slipperyMaterial
 });

@@ -4,13 +4,25 @@ import { Demo } from "../common/demo";
 const demo = new Demo();
 
 
-const planeGeometry = new THREE.PlaneGeometry(30, 30, 10, 10);
+const planeGeometry = new THREE.PlaneGeometry(100, 100, 2, 2);
+
+planeGeometry.rotateX(-Math.PI / 2);
+const vertices = planeGeometry.attributes.position.array;
+
+for (let i = 0; i < vertices.length; i += 3) {
+  if (i % 6 == 3) {
+    console.log("edit:", i);
+    vertices[i + 1] = 10;
+  }
+  console.log(i, vertices[i], vertices[i + 1], vertices[i + 2]);
+}
+planeGeometry.attributes.position.needsUpdate = true;
 
 const blueMaterial = new THREE.MeshStandardMaterial({
-  color: 0x156289,
+  color: 0xf56289,
   transparent: true,
   opacity: 0.5,
-  emissive: 0x072534,
+  emissive: 0xf72534,
   flatShading: true,
 });
 
@@ -23,6 +35,4 @@ let planeGui = demo.gui.addFolder("Plane");
 planeGui.add(planeMesh.material, "wireframe").name("Wireframe");
 
 demo.start(() => {
-  planeMesh.rotation.x += 0.01;
-  planeMesh.rotation.y += 0.01;
 });
